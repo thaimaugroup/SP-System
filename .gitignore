@@ -1,0 +1,40 @@
+# ===== dependencies =====
+/node_modules
+/.pnp
+.pnp.js
+
+# ===== next.js build output =====
+/.next/
+/out/
+/build
+next-env.d.ts
+
+# ===== environment & secrets (NEVER commit) =====
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# .env.example IS committed (placeholders only)
+
+# ===== logs & misc =====
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+build-log.txt
+.DS_Store
+*.pem
+.vercel
+.idea
+.vscode
+.claude/
+
+# ===== proprietary documentation (kept private, not pushed) =====
+*.pdf
+PRD.md
+ARCHITECT_DATA.md
+CHANGELOG.md
+README_SUPABASE_SETUP.md
+/docs/
+/design-system/
