@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { recordLifecycleSchema } from "@/lib/validation/import";
-import { requireEntityContext, safeAudit, updateWorkspaceStatus, workspaceCodeForTable } from "@/lib/db/server-helpers";
+import { requireEntityContext, requireCapability, safeAudit, updateWorkspaceStatus, workspaceCodeForTable } from "@/lib/db/server-helpers";
 
 // Governed record lifecycle (PRD §8.3, §8.7):
 //   - archive: soft-delete via status='archived'. Allowed for any status, preserves
@@ -22,6 +22,11 @@ export async function POST(request: Request) {
   }
 
   const { supabase, context } = contextResult;
+
+  // archive is an edit-class action; hard delete requires the stronger delete capability.
+  const capError = requireCapability(context.role, action === "delete" ? "delete" : "edit");
+  if (capError) return NextResponse.json({ error: capError.error }, { status: capError.status });
+
   const workspaceCode = workspaceCodeForTable(table);
 
   const { data: record, error: fetchError } = await supabase

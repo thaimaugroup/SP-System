@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { entityCreateSchema } from "@/lib/validation/import";
 import { getAppContext } from "@/lib/db/queries";
 import { safeAudit } from "@/lib/db/server-helpers";
+import { roleCan } from "@/lib/permissions/roles";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
 const WORKSPACE_CODES = ["WS01","WS02","WS03","WS04","WS05","WS06","WS07","WS08","WS09","WS10","WS11","WS12"];
@@ -21,8 +22,8 @@ export async function POST(request: Request) {
   if (!context.profileId || !context.entity) {
     return NextResponse.json({ error: "Authentication and an active entity are required." }, { status: 401 });
   }
-  if (context.role !== "owner" && context.role !== "admin") {
-    return NextResponse.json({ error: "Only owner and admin roles can create new entities." }, { status: 403 });
+  if (!roleCan(context.role, "admin")) {
+    return NextResponse.json({ error: "Only admin-level roles can create new entities." }, { status: 403 });
   }
 
   const admin = createSupabaseAdminClient();

@@ -6,13 +6,18 @@ import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const roles = [
-  { value: "owner", label: "Owner" },
-  { value: "admin", label: "Admin" },
-  { value: "strategist", label: "Strategist" },
-  { value: "analyst", label: "Analyst" },
-  { value: "department_head", label: "Department Head" },
+  // PRD §10.1 roles
+  { value: "system_admin", label: "System Admin" },
+  { value: "group_admin", label: "Group Admin" },
+  { value: "entity_admin", label: "Entity Admin" },
+  { value: "workspace_owner", label: "Workspace Owner" },
+  { value: "contributor", label: "Contributor" },
+  { value: "reviewer", label: "Reviewer" },
+  { value: "approver", label: "Approver" },
   { value: "viewer", label: "Viewer" },
-  { value: "executive", label: "Executive" }
+  { value: "import_manager", label: "Import Manager" },
+  { value: "ai_operator", label: "AI Operator" },
+  { value: "auditor", label: "Auditor" }
 ];
 
 export function UserInviteForm({
@@ -75,7 +80,7 @@ export function UserInviteForm({
         </label>
         <label className="grid gap-1 text-sm font-semibold text-text">
           Role
-          <select name="role" defaultValue="analyst" className="min-h-10 rounded-md border border-border px-3 py-2 font-normal" disabled={disabled || loading}>
+          <select name="role" defaultValue="contributor" className="min-h-10 rounded-md border border-border px-3 py-2 font-normal" disabled={disabled || loading}>
             {roles.map((role) => (
               <option key={role.value} value={role.value}>{role.label}</option>
             ))}

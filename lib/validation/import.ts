@@ -68,6 +68,11 @@ export const adminUserCreateSchema = z.object({
   email: z.string().email(),
   fullName: z.string().min(1),
   title: z.string().optional().nullable(),
-  role: z.enum(["owner", "admin", "strategist", "analyst", "department_head", "viewer", "executive"]),
+  role: z.enum([
+    "system_admin", "group_admin", "entity_admin", "workspace_owner", "contributor",
+    "reviewer", "approver", "viewer", "import_manager", "ai_operator", "auditor",
+    // legacy aliases (still assignable for backward compatibility)
+    "owner", "admin", "strategist", "analyst", "department_head", "executive"
+  ]),
   temporaryPassword: z.string().min(8).optional()
 });

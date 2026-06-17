@@ -12,6 +12,7 @@ import { CreateRecordForm } from "@/components/forms/create-record-form";
 import { AiPanel } from "@/components/workspaces/ai-panel";
 import { getAppContext, getWorkspaceData, getVersionHistory } from "@/lib/db/queries";
 import { WORKSPACE_BY_CODE } from "@/lib/workspaces/config";
+import { roleCan } from "@/lib/permissions/roles";
 import type { WorkspaceCode } from "@/types/workspace";
 
 export default async function WorkspacePage({
@@ -31,6 +32,11 @@ export default async function WorkspacePage({
     getWorkspaceData(params.workspaceCode, context.entity.id, context.cycle?.id ?? null, searchParams.table),
     getVersionHistory(context.entity.id, searchParams.table ?? workspace.modules[0].table, 15)
   ]);
+
+  // RBAC (PRD §10.2) — gate authoring UI by the signed-in role's capabilities.
+  const canCreate = roleCan(context.role, "create");
+  const canEdit = roleCan(context.role, "edit") || roleCan(context.role, "delete");
+  const canRunAi = roleCan(context.role, "ai");
 
   return (
     <>
@@ -72,18 +78,29 @@ export default async function WorkspacePage({
             moduleLabel={activeModule.label}
             moduleDescription={activeModule.description}
             initialRecords={records}
+            canMutate={canEdit}
           />
         </Card>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-          <CreateRecordForm
-            entityId={context.entity.id}
-            cycleId={context.cycle?.id ?? null}
-            table={activeModule.table}
-            workspaceCode={workspace.code}
-          />
-          <AiPanel entityId={context.entity.id} workspaceCode={workspace.code} targetTable={activeModule.table} />
-        </div>
+        {canCreate || canRunAi ? (
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+            {canCreate ? (
+              <CreateRecordForm
+                entityId={context.entity.id}
+                cycleId={context.cycle?.id ?? null}
+                table={activeModule.table}
+                workspaceCode={workspace.code}
+              />
+            ) : (
+              <div className="rounded-lg border border-dashed border-border bg-surface-muted/40 p-4 text-sm text-text-muted">
+                Your role ({context.role}) is read/review only — record creation is disabled for this workspace.
+              </div>
+            )}
+            {canRunAi ? (
+              <AiPanel entityId={context.entity.id} workspaceCode={workspace.code} targetTable={activeModule.table} />
+            ) : null}
+          </div>
+        ) : null}
 
         <LinkedDataPanel upstream={upstreamLinks} downstream={downstreamLinks} />
         <VersionHistoryPanel rows={versionRows as any} moduleLabel={activeModule.label} />

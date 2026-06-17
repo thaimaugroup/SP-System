@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { aiGenerateSchema } from "@/lib/validation/import";
 import { runAiGeneration } from "@/lib/ai/generate";
-import { requireEntityContext } from "@/lib/db/server-helpers";
+import { requireEntityContext, requireCapability } from "@/lib/db/server-helpers";
 import { WORKSPACE_BY_CODE } from "@/lib/workspaces/config";
 import type { WorkspaceCode } from "@/types/workspace";
 
@@ -22,6 +22,9 @@ export async function POST(request: Request) {
   }
 
   const { supabase, context } = contextResult;
+
+  const capError = requireCapability(context.role, "ai");
+  if (capError) return NextResponse.json({ error: capError.error }, { status: capError.status });
 
   try {
     const result = await runAiGeneration({

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { importRollbackSchema } from "@/lib/validation/import";
-import { requireEntityContext, safeAudit, updateWorkspaceStatus, workspaceCodeForTable } from "@/lib/db/server-helpers";
+import { requireEntityContext, requireCapability, safeAudit, updateWorkspaceStatus, workspaceCodeForTable } from "@/lib/db/server-helpers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 // Reverse a committed import batch (PRD §8.4, §17.2).
@@ -20,6 +20,10 @@ export async function POST(request: Request) {
   }
 
   const { supabase, context, batch } = bootstrap;
+
+  const capError = requireCapability(context.role, "rollback");
+  if (capError) return NextResponse.json({ error: capError.error }, { status: capError.status });
+
   if (!["committed", "partially_committed"].includes(batch.status)) {
     return NextResponse.json({ error: `Only committed batches can be rolled back (current status: ${batch.status}).` }, { status: 400 });
   }

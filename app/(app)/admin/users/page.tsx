@@ -5,6 +5,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Badge } from "@/components/ui/badge";
 import { UserInviteForm } from "@/components/admin/user-invite-form";
 import { getAppContext } from "@/lib/db/queries";
+import { roleCan } from "@/lib/permissions/roles";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type UserRoleRow = {
@@ -19,7 +20,7 @@ export default async function AdminUsersPage() {
   const context = await getAppContext();
   if (!context.entity) return <AuthRequired />;
 
-  const isAdmin = context.role === "owner" || context.role === "admin";
+  const isAdmin = roleCan(context.role, "admin");
   const serviceRoleConfigured = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
   const supabase = createSupabaseServerClient();
   const { data } = isAdmin && supabase

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cycleCreateSchema } from "@/lib/validation/import";
-import { requireEntityContext, safeAudit } from "@/lib/db/server-helpers";
+import { requireEntityContext, requireCapability, safeAudit } from "@/lib/db/server-helpers";
 
 // GET /api/cycles?entityId=... — list all cycles for an entity (newest first).
 export async function GET(request: Request) {
@@ -35,6 +35,9 @@ export async function POST(request: Request) {
   if ("error" in contextResult) return NextResponse.json({ error: contextResult.error }, { status: contextResult.status });
 
   const { supabase, context } = contextResult;
+
+  const capError = requireCapability(context.role, "admin");
+  if (capError) return NextResponse.json({ error: capError.error }, { status: capError.status });
 
   if (payload.data.complete_current) {
     await supabase

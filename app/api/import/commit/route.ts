@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireEntityContext, safeAudit, updateWorkspaceStatus, workspaceCodeForTable } from "@/lib/db/server-helpers";
+import { requireEntityContext, requireCapability, safeAudit, updateWorkspaceStatus, workspaceCodeForTable } from "@/lib/db/server-helpers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -14,6 +14,10 @@ export async function POST(request: Request) {
   }
 
   const { supabase, context, batch } = bootstrap;
+
+  const capError = requireCapability(context.role, "import");
+  if (capError) return NextResponse.json({ error: capError.error }, { status: capError.status });
+
   if (!batch.target_table) {
     return NextResponse.json({ error: "Import batch is missing target_table." }, { status: 400 });
   }

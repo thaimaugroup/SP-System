@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { parseImportFile } from "@/lib/import/parser";
 import { hashRow, normalizeImportRow, validateNormalizedRow } from "@/lib/import/normalize";
 import { importUploadSchema } from "@/lib/validation/import";
-import { requireEntityContext, safeAudit, updateWorkspaceStatus } from "@/lib/db/server-helpers";
+import { requireEntityContext, requireCapability, safeAudit, updateWorkspaceStatus } from "@/lib/db/server-helpers";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -29,6 +29,10 @@ export async function POST(request: Request) {
   }
 
   const { supabase, context } = contextResult;
+
+  const capError = requireCapability(context.role, "import");
+  if (capError) return NextResponse.json({ error: capError.error }, { status: capError.status });
+
   const { entityId, workspaceCode, targetTable } = parsedPayload.data;
   const parsed = await parseImportFile(file);
   const storageKey = `${entityId}/${workspaceCode}/${Date.now()}-${randomUUID()}-${sanitizeFilename(file.name)}`;

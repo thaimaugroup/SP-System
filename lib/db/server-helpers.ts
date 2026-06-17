@@ -2,6 +2,18 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/db/queries";
 import { getWorkspaceByTable } from "@/lib/workspaces/config";
+import { roleCan, roleLabel, type Capability } from "@/lib/permissions/roles";
+
+// Asserts the context role holds a capability (PRD §10.2). Returns an error
+// descriptor (403) when not permitted, or null when allowed. Used by API routes
+// to enforce fine-grained RBAC on top of RLS tenant isolation.
+export function requireCapability(role: string | null | undefined, capability: Capability) {
+  if (roleCan(role, capability)) return null;
+  return {
+    error: `Your role (${roleLabel(role)}) does not have permission to ${capability} in this workspace.`,
+    status: 403 as const
+  };
+}
 
 export type ServerEntityContext = Awaited<ReturnType<typeof getAppContext>> & {
   entity: NonNullable<Awaited<ReturnType<typeof getAppContext>>["entity"]>;

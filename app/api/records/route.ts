@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { recordCreateSchema } from "@/lib/validation/import";
-import { requireEntityContext, safeAudit, updateWorkspaceStatus, workspaceCodeForTable } from "@/lib/db/server-helpers";
+import { requireEntityContext, requireCapability, safeAudit, updateWorkspaceStatus, workspaceCodeForTable } from "@/lib/db/server-helpers";
 
 export async function POST(request: Request) {
   const payload = recordCreateSchema.safeParse(await request.json());
@@ -14,6 +14,10 @@ export async function POST(request: Request) {
   }
 
   const { supabase, context } = contextResult;
+
+  const capError = requireCapability(context.role, "create");
+  if (capError) return NextResponse.json({ error: capError.error }, { status: capError.status });
+
   const workspaceCode = payload.data.workspace_code ?? workspaceCodeForTable(payload.data.table);
 
   const { data: record, error } = await supabase

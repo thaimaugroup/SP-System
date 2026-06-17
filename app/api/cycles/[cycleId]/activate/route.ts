@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireEntityContext, safeAudit } from "@/lib/db/server-helpers";
+import { requireEntityContext, requireCapability, safeAudit } from "@/lib/db/server-helpers";
 
 // PATCH /api/cycles/[cycleId]/activate — switch active cycle.
 // Deactivates all other active cycles for the entity, then sets this one to 'active'.
@@ -26,6 +26,9 @@ export async function PATCH(_request: Request, { params }: { params: { cycleId: 
   if ("error" in contextResult) return NextResponse.json({ error: contextResult.error }, { status: contextResult.status });
 
   const { context } = contextResult;
+
+  const capError = requireCapability(context.role, "admin");
+  if (capError) return NextResponse.json({ error: capError.error }, { status: capError.status });
 
   // Deactivate all other active cycles for this entity.
   await supabase

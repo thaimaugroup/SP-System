@@ -3,6 +3,7 @@ import { AuthRequired } from "@/components/layout/auth-required";
 import { EntitySwitcher } from "@/components/entity/entity-switcher";
 import { CreateEntityForm } from "@/components/entity/create-entity-form";
 import { getAppContext, getEntitiesForCurrentUser } from "@/lib/db/queries";
+import { roleCan } from "@/lib/permissions/roles";
 
 export default async function EntitySelectorPage() {
   const context = await getAppContext();
@@ -19,7 +20,7 @@ export default async function EntitySelectorPage() {
       role: row.role as string
     }));
 
-  const canCreate = context.role === "owner" || context.role === "admin";
+  const canCreate = roleCan(context.role, "admin");
 
   return (
     <>

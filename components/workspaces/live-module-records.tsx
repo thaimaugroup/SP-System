@@ -10,13 +10,15 @@ export function LiveModuleRecords({
   entityId,
   moduleLabel,
   moduleDescription,
-  initialRecords
+  initialRecords,
+  canMutate = false
 }: {
   table: string;
   entityId: string;
   moduleLabel: string;
   moduleDescription: string;
   initialRecords: BusinessRecord[];
+  canMutate?: boolean;
 }) {
   const { records, connection, lastEventAt } = useLiveRecords(table, entityId, initialRecords);
 
@@ -36,7 +38,7 @@ export function LiveModuleRecords({
           </span>
         </div>
       </div>
-      <DataTable records={records} entityId={entityId} table={table} />
+      <DataTable records={records} entityId={canMutate ? entityId : undefined} table={canMutate ? table : undefined} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { approvalActionSchema } from "@/lib/validation/import";
 import { runAiGeneration } from "@/lib/ai/generate";
-import { requireEntityContext, safeAudit, updateWorkspaceStatus } from "@/lib/db/server-helpers";
+import { requireEntityContext, requireCapability, safeAudit, updateWorkspaceStatus } from "@/lib/db/server-helpers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { WORKSPACE_BY_CODE } from "@/lib/workspaces/config";
 import type { WorkspaceCode } from "@/types/workspace";
@@ -33,6 +33,17 @@ export async function POST(request: Request) {
   }
 
   const { context } = contextResult;
+
+  // RBAC (PRD §10.2): approve/edit_and_approve need 'approve'; reject needs 'reject';
+  // request_regeneration re-runs AI generation so it needs 'ai'.
+  const neededCap =
+    payload.data.action === "reject"
+      ? "reject"
+      : payload.data.action === "request_regeneration"
+        ? "ai"
+        : "approve";
+  const capError = requireCapability(context.role, neededCap);
+  if (capError) return NextResponse.json({ error: capError.error }, { status: capError.status });
 
   if (payload.data.action === "request_regeneration") {
     return handleRegeneration(supabase, approval, context, payload.data.notes);

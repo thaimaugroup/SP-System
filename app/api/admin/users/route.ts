@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminUserCreateSchema } from "@/lib/validation/import";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { requireEntityContext, safeAudit } from "@/lib/db/server-helpers";
+import { roleCan } from "@/lib/permissions/roles";
 
 export async function POST(request: Request) {
   const payload = adminUserCreateSchema.safeParse(await request.json());
@@ -15,8 +16,8 @@ export async function POST(request: Request) {
   }
 
   const { context } = contextResult;
-  if (context.role !== "owner" && context.role !== "admin") {
-    return NextResponse.json({ error: "Only owner and admin roles can create or invite users." }, { status: 403 });
+  if (!roleCan(context.role, "admin")) {
+    return NextResponse.json({ error: "Only admin-level roles can create or invite users." }, { status: 403 });
   }
 
   const admin = createSupabaseAdminClient();
